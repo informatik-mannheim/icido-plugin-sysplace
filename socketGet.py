@@ -4,7 +4,7 @@ import socket, time
 from de.icido.VDPExtension import State;
 from de.icido.VDPExtension import SceneObjectController;
 from de.icido.VDPExtension import AnimationListController;
-from IPConfig import *
+
 #=======================================================================
 # classes
 class Server:
@@ -19,9 +19,9 @@ class Server:
         self.lastInsides=["false","false","false"]
 #=======================================================================
     def attach(self):
-        print("--- attach ---")#
+        print("--- attach ---")
         self.sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-        self.sock.bind((ip,port))
+        self.sock.bind((getIp(),9999))
         thread.start_new_thread(self.getData())
             
     def detach(self):
@@ -33,9 +33,9 @@ class Server:
         self.sock.close()
 
     def getData(self):
-        i=0
         car_is_inside = False
-        while i<1:
+
+        while True:
             data, addr = self.sock.recvfrom(1024)
             data=data.decode()
             if data[0]=='{' and data[-1]=='}':
@@ -77,4 +77,9 @@ def detach():
 
 def release():
     mServer.release()
+	
+def getIp():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect(("example.com",80))
+    return s.getsockname()[0]
     
