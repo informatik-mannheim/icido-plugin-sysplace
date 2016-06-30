@@ -1,6 +1,6 @@
 #=======================================================================
 # imports
-import socket, time
+import socket, time, thread
 from de.icido.VDPExtension import State;
 from de.icido.VDPExtension import SceneObjectController;
 from de.icido.VDPExtension import AnimationListController;
@@ -22,7 +22,7 @@ class Server:
         print("--- attach ---")
         self.sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
         self.sock.bind((getIp(),9999))
-        thread.start_new_thread(self.getData())
+        thread.start_new_thread(self.getData, ())
             
     def detach(self):
         print("--- detach ---")
@@ -32,12 +32,18 @@ class Server:
         print("--- release ---")
         self.sock.close()
 
+    def isVisible(self):
+        return u'car' in self.mybox.getVisibleNameList()
+        
     def getData(self):
         car_is_inside = False
 
         while True:
             data, addr = self.sock.recvfrom(1024)
             data=data.decode()
+
+            print(data)
+
             if data[0]=='{' and data[-1]=='}':
                 array=data[1:-1].split(",")
                 color=array[1].split(":")[1][1:-1]
@@ -50,16 +56,17 @@ class Server:
             if self.lastInsides[0]=="true" and not car_is_inside:
                 self.mybox.setVisibleStatus(1)
                 if self.lastInsides[1]=="false":
+                    while not self.isVisible():
+                        continue
                     self.myCarRein.start()
                     car_is_inside = True
 
             else:
                 if self.lastInsides[0]=="false" and car_is_inside:
-                    self.myCarRaus.start()
-                    time.sleep(2)
-                    self.mybox.setVisibleStatus(0)
                     car_is_inside = False
-
+                    self.myCarRaus.start()
+                    time.sleep(5)
+                    self.mybox.setVisibleStatus(0)
 
       
 #=======================================================================
